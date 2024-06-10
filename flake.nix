@@ -29,4 +29,8 @@
         formatter = pkgs.alejandra;
       };
     };
+    nixConfig = {
+        extra-substituters = ["https://action-table.cachix.org"];
+        extra-trusted-public-keys = ["action-table.cachix.org-1:IbI8XIJqLPAuAPS4c9X86ZJ0vgwwJpZHXO38IbknRAQ="];
+    };
 }
