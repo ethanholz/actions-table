@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -25,9 +26,35 @@ type Output struct {
 	Description string `yaml:"description"`
 }
 
+func generateTable(input []byte) string {
+	var action Action
+	var builder strings.Builder
+	yaml.Unmarshal(input, &action)
+
+	builder.WriteString("## Inputs\n")
+	builder.WriteString("| Name | Description | Required | Default |\n")
+	builder.WriteString("| ---- | ----------- | -------- | ------- |\n")
+	for name, input := range action.Inputs {
+		if input.Default == nil {
+			fmt.Fprintf(&builder, "| %s | %s | %t |  |\n", name, input.Description, input.Required)
+		} else {
+			fmt.Fprintf(&builder, "| %s | %s | %t | %v |\n", name, input.Description, input.Required, input.Default)
+		}
+	}
+	builder.WriteString("\n\n")
+	builder.WriteString("## Outputs\n")
+	builder.WriteString("| Name | Description |\n")
+	builder.WriteString("| ---- | ----------- |\n")
+	for name, output := range action.Outputs {
+		fmt.Fprintf(&builder, "| %s | %s |\n", name, output.Description)
+	}
+
+	return builder.String()
+}
+
 func main() {
 	// Define flags
-	var action Action
+	// var action Action
 	file := flag.String("file", "", "File to read")
 	flag.Parse()
 	if *file == "" {
@@ -38,30 +65,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	yaml.Unmarshal(actions, &action)
-
-	if action.Name != "" {
-		fmt.Printf("# %s\n\n", action.Name)
-	}
-
-	// Print the markdown table headers
-	fmt.Println("## Inputs")
-	fmt.Println("| Name | Description | Required | Default |")
-	fmt.Println("| ---- | ----------- | -------- | ------- |")
-
-	for name, input := range action.Inputs {
-		if input.Default == nil {
-			fmt.Printf("| %s | %s | %t |  |\n", name, input.Description, input.Required)
-		} else {
-			fmt.Printf("| %s | %s | %t | %v |\n", name, input.Description, input.Required, input.Default)
-		}
-	}
-
-	fmt.Print("\n\n")
-	fmt.Println("## Outputs")
-	fmt.Println("| Name | Description |")
-	fmt.Println("| ---- | ----------- |")
-	for name, output := range action.Outputs {
-		fmt.Printf("| %s | %s |\n", name, output.Description)
-	}
+	out := generateTable(actions)
+	print(out)
 }
