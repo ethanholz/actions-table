@@ -15,16 +15,17 @@
         ...
       }: let
         version = "v0.1.0";
-        in{
-        packages = {
-          default = pkgs.buildGoModule {
+        package = pkgs.buildGoModule {
             inherit version;
             name = "action-table";
             src = ./.;
             vendorHash = "sha256-g+yaVIx4jxpAQ/+WrGKxhVeliYx7nLQe/zsGpxV4Fn4=";
             ldflags = ["-X main.Version=${version}"]; 
-          };
+            CGO_ENABLED = "0";
         };
+        in{
+        packages.default = package;
+        checks.default = package;
         devShells = {
           default = pkgs.mkShell {
             inputsFrom = [self'.packages.default];

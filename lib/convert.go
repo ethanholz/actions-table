@@ -24,7 +24,6 @@ type Output struct {
 	Description string `yaml:"description"`
 }
 
-//export GenerateTable
 func GenerateTable(input []byte) string {
 	var action Action
 	var builder strings.Builder
