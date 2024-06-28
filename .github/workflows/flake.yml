@@ -53,6 +53,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: result/bin/*
+        generate_release_notes: true
 
   merge:
     runs-on: ubuntu-latest
