@@ -7,24 +7,46 @@
     flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
         "x86_64-linux"
+        "aarch64-linux"
         "aarch64-darwin"
       ];
       perSystem = {
         self',
         pkgs,
+        system,
         ...
       }: let
-        version = "v0.1.0";
-        package = pkgs.buildGoModule {
-            inherit version;
+        commonArgs = rec {
+            version = "v0.1.0";
             name = "action-table";
+            pname = "action-table";
             src = ./.;
             vendorHash = "sha256-g+yaVIx4jxpAQ/+WrGKxhVeliYx7nLQe/zsGpxV4Fn4=";
-            ldflags = ["-X main.Version=${version}"]; 
+            ldflags = ["-X main.Version=${version}"];
             CGO_ENABLED = "0";
+            doCheck = false;
         };
+        package = pkgs.buildGoModule(commonArgs // {});
+        ci = pkgs.buildGoModule(commonArgs // {
+            installPhase = ''
+                  runHook preInstall
+
+                  mkdir -p $out
+                  initial="$GOPATH/bin/action-table"
+                  final="$GOPATH/bin/action-table-${system}"
+                  dir="$GOPATH/bin"
+                  [ -e "$initial" ] && mv $initial $final
+                  dir="$GOPATH/bin"
+                  [ -e "$dir" ] && cp -r $dir $out
+
+                  runHook postInstall
+            '';
+        });
         in{
-        packages.default = package;
+        packages = {
+            default = package; 
+            ci = ci;
+        };
         checks.default = package;
         devShells = {
           default = pkgs.mkShell {
